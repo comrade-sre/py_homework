@@ -2,16 +2,33 @@ import sys, sqlite3, requests, datetime, pickle
 from collections import defaultdict
 from html.parser import HTMLParser
 
-# Create table for recording request result
+# Create table for recording requests result
 conn = sqlite3.connect("homework.db")
 cursor = conn.cursor()
 try:
-    cursor.execute("CREATE TABLE tagtable (name VARCHAR(20), url VARCHAR(50), checkdate DATE, tags BLOB)")
+    cursor.execute("""CREATE  TABLE IF NOT EXISTS tagtable (name VARCHAR(20), url VARCHAR(50),
+                    checkdate DATE, tags BLOB)""")
 except Exception as e:
     print(e)
 finally:
     conn.commit()
 
+# Define class for working with db
+class db(object):
+    def __init__(self, conn):
+        self.conn = conn
+        self.inner_cursor = conn.cursor()
+
+    def save(self, site_name, url, now):
+        self.sql = f"INSERT INTO tagtable VALUES('{site_name}','{url}','{now}', NULL)"
+        self.inner_cursor.execute(self.sql)
+        self.conn.commit()
+
+    def load(self, url):
+        self.url = url
+        self.sql = f"SELECT DISTINCT * FROM tagtable WHERE url = '{url}';"
+        self.result = self.inner_cursor.execute(self.sql)
+        return self.inner_cursor.fetchall()
 
 # Custom exception type for http response, we need only html
 class FormatException(Exception):
@@ -48,7 +65,7 @@ def load_html(url: str):
     except Exception as e:
         print('An error occurs while http request: {}'.format(sys.exc_info()[0]))
 
-
+# Parse arguments
 arg_message = 'use it in this way:\nmain.py --get/view url'
 method = sys.argv[1]
 arg_len = len(sys.argv)
@@ -64,25 +81,19 @@ myparser = parser()
 myparser.feed(page)
 
 
-class db(object):
-    def __init__(self, conn):
-        self.conn = conn
-        self.inner_cursor = conn.cursor()
 
-    def save(self, site_name, url, now, tags):
-        self.sql = f"INSERT INTO TAGTABLE VALUES('{site_name}','{url}','{now}', '{tags}')"
-        print(self.sql)
-        self.inner_cursor.execute(self.sql)
-        self.conn.commit()
-
-
+# Define variable for db queries
 site_name = url.split('.')[-2].split(':')[1].replace('/', '')
 now = datetime.datetime.now().strftime("%Y-%m-%d")
 tags = pickle.dumps(myparser.tagdict, 2)
-print(type(tags))
+
+# Create object of db class
 dbsave = db(conn)
-dbsave.save(site_name, url, now, tags)
-#sql = f"INSERT INTO TAGTABLE VALUES('{site_name}','{url}','{now}', '{tags}')"
-#print(sql)
-#cursor.execute(sql)
-#conn.commit()
+# save result in db
+dbsave.save(site_name, url, now)
+# load resul from db
+print(dbsave.load(url))
+# sql = f"INSERT INTO TAGTABLE VALUES('{site_name}','{url}','{now}', '{tags}')"
+# print(sql)
+# cursor.execute(sql)
+# conn.commit()
