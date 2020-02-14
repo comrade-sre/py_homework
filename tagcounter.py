@@ -1,4 +1,4 @@
-import sys, sqlite3, requests, datetime, pickle
+import sys, sqlite3, requests, datetime, pickle, unittest
 from collections import defaultdict
 from html.parser import HTMLParser
 
@@ -12,6 +12,10 @@ except Exception as e:
     print(e)
 finally:
     conn.commit()
+
+class TestDBMethods(unittest.TestCase):
+    def testInsert(self, conn, site_name, url, now, tags):
+        pass
 
 
 # Define class for working with db
@@ -64,7 +68,6 @@ def load_html(url: str):
         response = requests.get(url)
         response.raise_for_status()
         contype = response.headers['Content-Type']
-        print(type(contype))
         if 'text/html' not in contype:
             raise FormatException(contype)
         if 'utf-8' not in contype:
