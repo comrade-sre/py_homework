@@ -2,20 +2,35 @@ import sys, sqlite3, requests, datetime, pickle, unittest
 from collections import defaultdict
 from html.parser import HTMLParser
 
-# Create table for recording requests result
-conn = sqlite3.connect("homework.db")
-cursor = conn.cursor()
-try:
-    cursor.execute("""CREATE  TABLE IF NOT EXISTS tagtable (name VARCHAR(20), url VARCHAR(50),
-                    checkdate DATE, tags BLOB)""")
-except Exception as e:
-    print(e)
-finally:
-    conn.commit()
+def create_connection():
+    # Create table for recording requests result
+    conn = sqlite3.connect("homework.db")
+    cursor = conn.cursor()
+    try:
+        cursor.execute("""CREATE  TABLE IF NOT EXISTS tagtable (name VARCHAR(20), url VARCHAR(50),
+                        checkdate DATE, tags BLOB)""")
+    except Exception as e:
+        print(e)
+    finally:
+        conn.commit()
+    return conn
 
 class TestDBMethods(unittest.TestCase):
-    def testInsert(self, conn, site_name, url, now, tags):
+    conn = None
+    @classmethod
+    def setUpClass(cls):
+        super(cls).setUpClass()
+        cls.conn = create_connection()
+
+    def setUp(self):
         pass
+
+    def tearDown(self):
+        pass
+
+    def testInsert(self):
+        site_name, url, now, tags = '', '', '', ''
+        self.assertEqual(url, url_result)
 
 
 # Define class for working with db
@@ -25,22 +40,21 @@ class db(object):
         self.inner_cursor = conn.cursor()
 
     def save(self, site_name, url, now, tags):
-        self.sql = f"INSERT INTO tagtable VALUES('{site_name}','{url}','{now}', ?)"
-        self.inner_cursor.execute(self.sql, (tags,))
+        sql = f"INSERT INTO tagtable VALUES('{site_name}','{url}','{now}', ?)"
+        self.inner_cursor.execute(sql, (tags,))
         self.conn.commit()
 
     def load(self, url):
-        self.url = url
-        self.sql = f"SELECT DISTINCT * FROM tagtable WHERE url = '{url}';"
-        self.inner_cursor.execute(self.sql)
+        sql = f"SELECT DISTINCT * FROM tagtable WHERE url = '{url}';"
+        self.inner_cursor.execute(sql)
         return self.inner_cursor.fetchall()
 
     def show(self, result):
-        self.tags = pickle.loads(result[-1][-1])
+        tags = pickle.loads(result[-1][-1])
         print("SITE: ", result[0][0])
         print("URL: ", result[0][1])
         print("DATE: ", result[0][2])
-        print("TAGS: \n", dict(self.tags))
+        print("TAGS: \n", dict(tags))
 
 
 # Custom exception type for http response, we need only html
@@ -90,8 +104,12 @@ if method != '--get' and method != '--view':
     print('incorrect method,', arg_message)
     exit(0)
 url = sys.argv[2]
+# create connection to db
+conn = create_connection()
 # Create object of db class
 dbquery = db(conn)
+
+
 
 if method == '--get':
     page = load_html(url)
