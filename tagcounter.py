@@ -37,12 +37,16 @@ class db(object):
         self.inner_cursor.execute(sql)
         return self.inner_cursor.fetchall()
 
-    def show(self, result):
+    def show(self, result, output):
         tags = pickle.loads(result[-1][-1])
-        print("SITE: ", result[0][0])
-        print("URL: ", result[0][1])
-        print("DATE: ", result[0][2])
-        print("TAGS: \n", dict(tags))
+        if output == "tk":
+            return tags
+        else:
+            print("SITE: ", result[0][0])
+            print("URL: ", result[0][1])
+            print("DATE: ", result[0][2])
+            print("TAGS: \n", dict(tags))
+
 
 # class for graphical interface
 class Interface(tk.Frame):
@@ -53,10 +57,11 @@ class Interface(tk.Frame):
         self.create_widgets()
 
     def create_widgets(self):
-
- #       self.get = tk.Button(self, text="get", fg="green", command=getPage(url))
- #       self.view = tk.Button(self, text="view", fg="green", command=viewPage(url))
-
+        # getPage(url, "tk")
+        self.field = tk.Entry(width=40).pack()
+        self.lable = tk.Label(bg='black', fg='green', width=40).pack()
+        self.get = tk.Button(self, text="get", fg="green").pack(side="right")
+        self.view = tk.Button(self, text="view", fg="green").pack(side="left")
         self.quit = tk.Button(self, text="leave", fg="red",
                               command=self.master.destroy)
         self.quit.pack(side="bottom")
@@ -75,7 +80,8 @@ class parser(HTMLParser):
     def handle_starttag(self, tag, attr):
         self.tagdict[tag] += 1
 
-def getPage(url):
+
+def getPage(url: str, mode: str):
     # load and parse page
     page = load_html(url)
     myparser = parser()
@@ -89,9 +95,13 @@ def getPage(url):
     # load result from db
     result = dbquery.load(url)
     # show result from db
-    dbquery.show(result)
+    if mode == "tty":
+        dbquery.show(result)
+    if mode == "tk":
+        return dbquery.show(result, "tk")
 
-def viewPage(url):
+
+def viewPage(url: str):
     try:
         result = dbquery.load(url)
         dbquery.show(result)
@@ -120,6 +130,11 @@ def load_html(url: str):
         print('An error occurs while http request: {}'.format(sys.exc_info()[0]))
 
 
+# create connection to db
+conn = create_connection('homework')
+# create object of db class
+dbquery = db(conn)
+
 # Parse arguments
 arg_message = 'use it in this way:\nmain.py --get/view url'
 
@@ -137,16 +152,9 @@ elif arg_len == 3:
         print('incorrect method,', arg_message)
         exit(0)
     # define url
-    url = sys.argv[2]
-    # create connection to db
-    conn = create_connection('homework')
-    # create object of db class
-    dbquery = db(conn)
-
+    url = str(sys.argv[2])
     if method == '--get':
-        getPage(url)
-
-
+        getPage(url, "tk")
     if method == '--view':
         viewPage(url)
 else:
