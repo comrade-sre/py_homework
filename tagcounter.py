@@ -1,8 +1,9 @@
-import sys, sqlite3, requests, datetime, pickle, unittest, argparse
+import sys, sqlite3, requests, datetime, pickle, argparse, tkinter as tk
 from collections import defaultdict
 from html.parser import HTMLParser
 
-def create_connection(storage = None):
+
+def create_connection(storage=None):
     # Create table for recording requests result
     if storage == None:
         conn = sqlite3.connect(":memory:")
@@ -20,41 +21,7 @@ def create_connection(storage = None):
     return conn
 
 
-class TestDBMethods(unittest.TestCase):
-
-    @classmethod
-    def setUpClass(cls):
-        super(cls).setUpClass()
-
-
-
-
-    def setUp(self):
-        pass
-
-
-    def tearDown(self):
-        pass
-
-    def testInsert(self):
-        site_name, url, now = 'vk', 'https://vk.com', '2019-04-25'
-        # pickle.loads(tags[-1][-1]
-        self.tags = {'html': 1, 'head': 1, 'meta': 13, 'base': 1, 'link': 7, 'title': 1, 'script': 7, 'body': 1,
-                     'div': 31, 'a': 5, 'h1': 1, 'b': 1, 'span': 1, 'form': 1, 'dl': 2, 'dd': 2, 'input': 3, 'i': 1,
-                     'img': 2}
-        self.conn = create_connection()
-        self.cursor = self.conn.cursor()
-        self.testdb = db(self.conn)
-        self.insert_tags = pickle.dumps(self.tags, 2)
-
-        self.testdb.save(site_name, url, now, self.insert_tags)
-        self.cursor.execute(f"SELECT tags FROM tagtable WHERE url = '{url}' \
-         AND name = '{site_name}' AND checkdate = '{now}'")
-        self.result = self.cursor.fetchall()
-        self.assertDictEqual(self.tags, pickle.loads(self.result[-1][-1]))
-
-
-# Define class for working with db
+# define class for working with db
 class db(object):
     def __init__(self, conn):
         self.conn = conn
@@ -77,6 +44,23 @@ class db(object):
         print("DATE: ", result[0][2])
         print("TAGS: \n", dict(tags))
 
+# class for graphical interface
+class Interface(tk.Frame):
+    def __init__(self, master=None):
+        super().__init__(master)
+        self.master = master
+        self.pack()
+        self.create_widgets()
+
+    def create_widgets(self):
+
+ #       self.get = tk.Button(self, text="get", fg="green", command=getPage(url))
+ #       self.view = tk.Button(self, text="view", fg="green", command=viewPage(url))
+
+        self.quit = tk.Button(self, text="leave", fg="red",
+                              command=self.master.destroy)
+        self.quit.pack(side="bottom")
+
 
 # Custom exception type for http response, we need only html
 class FormatException(Exception):
@@ -91,11 +75,33 @@ class parser(HTMLParser):
     def handle_starttag(self, tag, attr):
         self.tagdict[tag] += 1
 
+def getPage(url):
+    # load and parse page
+    page = load_html(url)
+    myparser = parser()
+    myparser.feed(page)
+    # Define variable for db queries
+    site_name = url.split('.')[-2].split(':')[1].replace('/', '')
+    now = datetime.datetime.now().strftime("%Y-%m-%d")
+    tags = pickle.dumps(myparser.tagdict, 2)
+    # save result to db
+    dbquery.save(site_name, url, now, tags)
+    # load result from db
+    result = dbquery.load(url)
+    # show result from db
+    dbquery.show(result)
+
+def viewPage(url):
+    try:
+        result = dbquery.load(url)
+        dbquery.show(result)
+    except IndexError as e:
+        print('{}\nThere is no such data in DB, you need to use --get instead'.format(sys.exc_info()[0]))
+
 
 # Function for making http get request
 def load_html(url: str):
     """
-
     :param url:
     :return:
     """
@@ -116,41 +122,32 @@ def load_html(url: str):
 
 # Parse arguments
 arg_message = 'use it in this way:\nmain.py --get/view url'
-method = sys.argv[1]
+
 arg_len = len(sys.argv)
-if arg_len > 3 or arg_len < 3:
+if arg_len == 1:
+    root = tk.Tk()
+    app = Interface(master=root)
+    app.mainloop()
+elif arg_len > 3:
     print('incorrect number of arguments,', arg_message)
     exit(0)
-if method != '--get' and method != '--view':
-    print('incorrect method,', arg_message)
-    exit(0)
-url = sys.argv[2]
-# create connection to db
-conn = create_connection('homework')
-# Create object of db class
-dbquery = db(conn)
+elif arg_len == 3:
+    method = sys.argv[1]
+    if method != '--get' and method != '--view':
+        print('incorrect method,', arg_message)
+        exit(0)
+    # define url
+    url = sys.argv[2]
+    # create connection to db
+    conn = create_connection('homework')
+    # create object of db class
+    dbquery = db(conn)
 
-if method == '--get':
-    page = load_html(url)
-    myparser = parser()
-    myparser.feed(page)
-    # Define variable for db queries
-    site_name = url.split('.')[-2].split(':')[1].replace('/', '')
-    now = datetime.datetime.now().strftime("%Y-%m-%d")
-    tags = pickle.dumps(myparser.tagdict, 2)
-    # test methods
-    test = TestDBMethods()
-    test.testInsert()
+    if method == '--get':
+        getPage(url)
 
-    # save result to db
-    dbquery.save(site_name, url, now, tags)
-    # load result from db
-    result = dbquery.load(url)
-    # show result from db
-    dbquery.show(result)
-if method == '--view':
-    try:
-        result = dbquery.load(url)
-        dbquery.show(result)
-    except IndexError as e:
-        print('{}\nThere is no such data in DB, you need to use --get instead'.format(sys.exc_info()[0]))
+
+    if method == '--view':
+        viewPage(url)
+else:
+    pass
