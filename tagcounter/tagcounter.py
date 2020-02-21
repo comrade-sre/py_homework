@@ -1,4 +1,9 @@
-import sys, sqlite3, requests, datetime, pickle, argparse, tkinter as tk
+import datetime
+import pickle
+import requests
+import sqlite3
+import sys
+import tkinter as tk
 from collections import defaultdict
 from html.parser import HTMLParser
 
@@ -49,7 +54,6 @@ class db(object):
                 else:
                     formatList.append(f'{key}: {val}  ')
             tk_output = ''.join(formatList)
-            print(tk_output)
             return tk_output
 
         else:
@@ -85,6 +89,7 @@ class Interface(tk.Frame):
     def view_url(self):
         self.url = self.field.get()
         self.result = viewPage(self.url, "tk")
+        print(self.result)
         self.lable['text'] = self.result
 
 
@@ -123,7 +128,10 @@ def getPage(url: str, mode: str):
 def viewPage(url: str, mode: str):
     try:
         result = dbquery.load(url)
-        dbquery.show(result, mode)
+        if mode == "tk":
+            return dbquery.show(result, mode)
+        else:
+            dbquery.show(result, mode)
     except IndexError as e:
         print('{}\nThere is no such data in DB, you need to use --get instead'.format(sys.exc_info()[0]))
 
