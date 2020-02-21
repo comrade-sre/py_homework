@@ -37,10 +37,36 @@ class db(object):
         self.inner_cursor.execute(sql)
         return self.inner_cursor.fetchall()
 
-    def show(self, result, output):
+    def show(self, result, output: str):
         tags = pickle.loads(result[-1][-1])
         if output == "tk":
-            return tags
+            value = iter(tags.items())
+            height = 1 + len(tags.items()) // 10
+            width = 10
+            for i in range(height):
+                for j in range(width):
+                    v = tk.StringVar()
+                    try:
+                        item = next(value)
+                    except StopIteration:
+                        break
+                    key = item[0]
+                    val = item[1]
+                    v.set(f'{key}: {val}\n')
+            return v, i, j
+        #if output == "tk":
+        #    formatList = []
+        #    for i, item in enumerate(tags.items(), 1):
+        #        key = item[0]
+        #        val = item[1]
+        #        if i % 10 == 0:
+        #            formatList.append(f'{key}: {val}\n')
+        #        else:
+        #            formatList.append(f'{key}: {val}  ')
+        #    tk_output = ''.join(formatList)
+        #    print(tk_output)
+        #   return tk_output
+
         else:
             print("SITE: ", result[0][0])
             print("URL: ", result[0][1])
@@ -57,18 +83,26 @@ class Interface(tk.Frame):
         self.create_widgets()
 
     def create_widgets(self):
-        # getPage(url, "tk")
-        self.field = tk.Entry(width=40).pack()
-        self.lable = tk.Label(bg='black', fg='green', width=40).pack()
-        self.get = tk.Button(self, text="get", fg="green", command=self.get_url()).pack(side="right")
-        self.view = tk.Button(self, text="view", fg="green").pack(side="left")
-        self.quit = tk.Button(self, text="leave", fg="red",
-                              command=self.master.destroy)
+        self.field = tk.Entry(width=40)
+        self.lable = tk.Label(justify="left", fg='green', bg='black',  width=60, height=10)
+        self.get = tk.Button(self, text="get", fg="green", command=self.get_url).pack(side="right")
+        self.view = tk.Button(self, text="view", fg="green", command=self.view_url).pack(side="left")
+        self.quit = tk.Button(self, text="leave", fg="red", command=self.master.destroy)
         self.quit.pack(side="bottom")
+        self.field.pack()
+        self.lable.pack()
+
     def get_url(self):
         self.url = self.field.get()
         self.result = getPage(self.url, "tk")
+        self.lable['text'] = self.result.v
+        self.lable.grid(row=self.result.i, column=self.result.j)
+
+    def view_url(self):
+        self.url = self.field.get()
+        self.result = viewPage(self.url, "tk")
         self.lable['text'] = self.result
+
 
 # Custom exception type for http response, we need only html
 class FormatException(Exception):
@@ -98,16 +132,14 @@ def getPage(url: str, mode: str):
     # load result from db
     result = dbquery.load(url)
     # show result from db
-    if mode == "tty":
-        dbquery.show(result)
-    if mode == "tk":
-        return dbquery.show(result, "tk")
+    dbquery.show(result, mode)
+    return dbquery.show(result, mode)
 
 
-def viewPage(url: str):
+def viewPage(url: str, mode: str):
     try:
         result = dbquery.load(url)
-        dbquery.show(result)
+        dbquery.show(result, mode)
     except IndexError as e:
         print('{}\nThere is no such data in DB, you need to use --get instead'.format(sys.exc_info()[0]))
 
@@ -157,8 +189,8 @@ elif arg_len == 3:
     # define url
     url = str(sys.argv[2])
     if method == '--get':
-        getPage(url, "tk")
+        getPage(url, "tty")
     if method == '--view':
-        viewPage(url)
+        viewPage(url, "tty")
 else:
-    pass
+    exit(0)

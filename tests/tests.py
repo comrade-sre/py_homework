@@ -1,5 +1,5 @@
 import unittest
-
+from tagcounter import db
 
 class TestDBMethods(unittest.TestCase):
 
