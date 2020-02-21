@@ -70,6 +70,7 @@ class Interface(tk.Frame):
         self.master = master
         self.pack()
         self.create_widgets()
+        self.dbquery = dbquery
 
     def create_widgets(self):
         self.field = tk.Entry(width=40)
@@ -89,7 +90,6 @@ class Interface(tk.Frame):
     def view_url(self):
         self.url = self.field.get()
         self.result = viewPage(self.url, "tk")
-        print(self.result)
         self.lable['text'] = self.result
 
 
@@ -107,7 +107,7 @@ class parser(HTMLParser):
         self.tagdict[tag] += 1
 
 
-def getPage(url: str, mode: str, dbquery):
+def getPage(url: str, mode: str):
     # load and parse page
     page = load_html(url)
     myparser = parser()
@@ -125,7 +125,7 @@ def getPage(url: str, mode: str, dbquery):
     return dbquery.show(result, mode)
 
 
-def viewPage(url: str, mode: str, dbquery):
+def viewPage(url: str, mode: str):
     try:
         result = dbquery.load(url)
         if mode == "tk":
@@ -160,6 +160,7 @@ def main():
     # create connection to db
     conn = create_connection('homework')
     # create object of db class
+    global dbquery
     dbquery = db(conn)
 
     # Parse arguments
@@ -181,9 +182,9 @@ def main():
         # define url
         url = str(sys.argv[2])
         if method == '--get':
-            getPage(url, "tty", dbquery)
+            getPage(url, "tty")
         if method == '--view':
-            viewPage(url, "tty", dbquery)
+            viewPage(url, "tty")
     else:
         exit(0)
 if __name__ == '__main__':
