@@ -40,32 +40,17 @@ class db(object):
     def show(self, result, output: str):
         tags = pickle.loads(result[-1][-1])
         if output == "tk":
-            value = iter(tags.items())
-            height = 1 + len(tags.items()) // 10
-            width = 10
-            for i in range(height):
-                for j in range(width):
-                    v = tk.StringVar()
-                    try:
-                        item = next(value)
-                    except StopIteration:
-                        break
-                    key = item[0]
-                    val = item[1]
-                    v.set(f'{key}: {val}\n')
-            return v, i, j
-        #if output == "tk":
-        #    formatList = []
-        #    for i, item in enumerate(tags.items(), 1):
-        #        key = item[0]
-        #        val = item[1]
-        #        if i % 10 == 0:
-        #            formatList.append(f'{key}: {val}\n')
-        #        else:
-        #            formatList.append(f'{key}: {val}  ')
-        #    tk_output = ''.join(formatList)
-        #    print(tk_output)
-        #   return tk_output
+            formatList = []
+            for i, item in enumerate(tags.items(), 1):
+                key = item[0]
+                val = item[1]
+                if i % 10 == 0:
+                    formatList.append(f'{key}: {val}\n')
+                else:
+                    formatList.append(f'{key}: {val}  ')
+            tk_output = ''.join(formatList)
+            print(tk_output)
+            return tk_output
 
         else:
             print("SITE: ", result[0][0])
@@ -95,8 +80,7 @@ class Interface(tk.Frame):
     def get_url(self):
         self.url = self.field.get()
         self.result = getPage(self.url, "tk")
-        self.lable['text'] = self.result.v
-        self.lable.grid(row=self.result.i, column=self.result.j)
+        self.lable['text'] = self.result
 
     def view_url(self):
         self.url = self.field.get()
