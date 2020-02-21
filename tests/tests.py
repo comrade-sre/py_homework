@@ -1,18 +1,18 @@
 import unittest
-from tagcounter import db
+import tagcounter
 
 class TestDBMethods(unittest.TestCase):
 
-    @classmethod
-    def setUpClass(cls):
-        super(cls).setUpClass()
+#    @classmethod
+#    def setUpClass(cls):
+#        super(cls).setUpClass()
     def setUp(self):
         self.tags = {'html': 1, 'head': 1, 'meta': 13, 'base': 1, 'link': 7, 'title': 1, 'script': 7, 'body': 1,
                      'div': 31, 'a': 5, 'h1': 1, 'b': 1, 'span': 1, 'form': 1, 'dl': 2, 'dd': 2, 'input': 3, 'i': 1,
                      'img': 2}
-        self.conn = create_connection()
+        self.conn = tagcounter.create_connection()
         self.cursor = self.conn.cursor()
-        self.testdb = db(self.conn)
+        self.testdb = tagcounter.db(self.conn)
         self.insert_tags = pickle.dumps(self.tags, 2)
     def tearDown(self):
         pass

@@ -9,6 +9,6 @@ setup(
     long_description=open(join(dirname(__file__), 'README.md')).read(),
     entry_points={
         'console_scripts':
-            ['tagcounter = tagcounter.tagcounter:getPage']
+            ['tagcounter = tagcounter.tagcounter:main']
         }
 )

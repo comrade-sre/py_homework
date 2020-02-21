@@ -107,7 +107,7 @@ class parser(HTMLParser):
         self.tagdict[tag] += 1
 
 
-def getPage(url: str, mode: str):
+def getPage(url: str, mode: str, dbquery):
     # load and parse page
     page = load_html(url)
     myparser = parser()
@@ -125,7 +125,7 @@ def getPage(url: str, mode: str):
     return dbquery.show(result, mode)
 
 
-def viewPage(url: str, mode: str):
+def viewPage(url: str, mode: str, dbquery):
     try:
         result = dbquery.load(url)
         if mode == "tk":
@@ -156,33 +156,35 @@ def load_html(url: str):
     except Exception as e:
         print('An error occurs while http request: {}'.format(sys.exc_info()[0]))
 
+def main():
+    # create connection to db
+    conn = create_connection('homework')
+    # create object of db class
+    dbquery = db(conn)
 
-# create connection to db
-conn = create_connection('homework')
-# create object of db class
-dbquery = db(conn)
+    # Parse arguments
+    arg_message = 'use it in this way:\nmain.py --get/view url'
 
-# Parse arguments
-arg_message = 'use it in this way:\nmain.py --get/view url'
-
-arg_len = len(sys.argv)
-if arg_len == 1:
-    root = tk.Tk()
-    app = Interface(master=root)
-    app.mainloop()
-elif arg_len > 3:
-    print('incorrect number of arguments,', arg_message)
-    exit(0)
-elif arg_len == 3:
-    method = sys.argv[1]
-    if method != '--get' and method != '--view':
-        print('incorrect method,', arg_message)
+    arg_len = len(sys.argv)
+    if arg_len == 1:
+        root = tk.Tk()
+        app = Interface(master=root)
+        app.mainloop()
+    elif arg_len > 3:
+        print('incorrect number of arguments,', arg_message)
         exit(0)
-    # define url
-    url = str(sys.argv[2])
-    if method == '--get':
-        getPage(url, "tty")
-    if method == '--view':
-        viewPage(url, "tty")
-else:
-    exit(0)
+    elif arg_len == 3:
+        method = sys.argv[1]
+        if method != '--get' and method != '--view':
+            print('incorrect method,', arg_message)
+            exit(0)
+        # define url
+        url = str(sys.argv[2])
+        if method == '--get':
+            getPage(url, "tty", dbquery)
+        if method == '--view':
+            viewPage(url, "tty", dbquery)
+    else:
+        exit(0)
+if __name__ == '__main__':
+    main()
