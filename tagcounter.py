@@ -60,12 +60,15 @@ class Interface(tk.Frame):
         # getPage(url, "tk")
         self.field = tk.Entry(width=40).pack()
         self.lable = tk.Label(bg='black', fg='green', width=40).pack()
-        self.get = tk.Button(self, text="get", fg="green").pack(side="right")
+        self.get = tk.Button(self, text="get", fg="green", command=self.get_url()).pack(side="right")
         self.view = tk.Button(self, text="view", fg="green").pack(side="left")
         self.quit = tk.Button(self, text="leave", fg="red",
                               command=self.master.destroy)
         self.quit.pack(side="bottom")
-
+    def get_url(self):
+        self.url = self.field.get()
+        self.result = getPage(self.url, "tk")
+        self.lable['text'] = self.result
 
 # Custom exception type for http response, we need only html
 class FormatException(Exception):
