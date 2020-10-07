@@ -16,7 +16,7 @@ class Queue(object):
         self.array.append(message)
     def dequeue(self):
         if len(self.array) == 0:
-            raise QueueException("the qeue is empty", 2)
+            raise QueueException("the queue is empty", 2)
         dequeued_message = self.array.pop(0)
         return dequeued_message
 test = Queue(101)

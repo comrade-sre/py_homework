@@ -3,7 +3,7 @@ class EmptyList(Exception):
       def __init__(self, message, exit_code):
          self.message = message
          self.exit = exit_code
-         print(message)
+         print(self.message)
          exit(self.exit)
 class Node(object):
       def __init__(self, data=None, next=None):
