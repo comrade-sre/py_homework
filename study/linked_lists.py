@@ -19,12 +19,9 @@ class List(object):
           self.head = new
        elif self.head and next:
             current = self.head
-            print(f"head is {current}")
             while current.next:
                   if current.next == next:
                      current.next = new
-                     print("current node is {current}")
-                     print("inserted node is {new}")
                      break
                   current.next = current
             else:
