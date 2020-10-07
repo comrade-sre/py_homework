@@ -1,6 +1,8 @@
 # py_homework
 ```
-repository for my homework
+repository for my homeworks and study
+
+
 python setup.py install
 pip install tagcounter
 tagcounter --get/view https://example.com
